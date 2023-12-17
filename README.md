@@ -27,7 +27,7 @@ pricing” feed.
    ```shell
    composer install
    ```
-3. Create a database and configure the connection in the `.env` file and run the seed. It will also create the procedure
+3. Create a database and configure the connection in the .env file, then run the seed. This process will populate the database and also create the stored procedure.
    ```shell
    php artisan db:seed
    ```
