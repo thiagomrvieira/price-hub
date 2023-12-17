@@ -6,21 +6,20 @@ use App\Services\PriceService;
 
 class PriceController extends Controller
 {
-    protected PriceService $priceService;
-
-    public function __construct(PriceService $priceService)
-    {
-        $this->priceService = $priceService;
-    }
+    public function __construct(protected PriceService $priceService){}
 
     /**
-     * Get a listing of live prices.
+     * Get prices for a product.
      *
-     * @return array
+     * @param  string  $productCode
+     * @param  string|null  $accountId
+     * @return \Illuminate\Http\JsonResponse
      */
-    public function index(): array
+    public function index(string $productCode, ?string $accountId = null)
     {
-        return $this->priceService->getLivePrices();
+        $prices = $this->priceService->getPrices($productCode, $accountId);
+
+        return response()->json(['prices' => $prices]);
     }
 
 }
