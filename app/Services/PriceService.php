@@ -19,14 +19,12 @@ class PriceService
      */
     public function getPrices(string $productCode, ?string $accountId = null) 
     {
-        // $livePrices = $this->getLivePrices($productCode, $accountId);
-        return $this->getDatabasePrices($productCode, $accountId);
-        // dd( $this->getDatabasePrices($productCode, $accountId)->first());
-        // $databasePrices = empty($livePrices) ? $this->getDatabasePrices($productCode, $accountId) : [];
+        $livePrices = $this->getLivePrices($productCode, $accountId);
+        $databasePrices = $this->getDatabasePrices($productCode, $accountId);
 
-        // $mergedPrices = $this->mergePrices($databasePrices, $livePrices);
-
-        // return collect($mergedPrices);
+        return $livePrices;
+        return $databasePrices;
+        
     }
 
     /**
@@ -53,6 +51,7 @@ class PriceService
         return $query->orderBy('value')->first();
     }
 
+
     /**
      * Get live prices from the JSON file.
      *
@@ -63,62 +62,14 @@ class PriceService
         $filePath = base_path('app/Services/live_prices.json');
         $livePrices = file_exists($filePath) ? $this->decodeJsonFile($filePath) : [];
 
-        // Filtrar os preços ao código do produto (SKU) e conta específica
         $filteredPrices = array_filter($livePrices, function ($price) use ($productCode, $accountId) {
             return isset($price['sku']) && $price['sku'] === $productCode
                 && (!isset($price['account']) || ($accountId && $price['account'] === $accountId));
         });
 
-        // Mapear os preços filtrados para objetos
-        $priceObjects = collect($filteredPrices)->map(function ($priceData) {
-            return (object)$priceData;
-        });
+        $firstPrice = reset($filteredPrices);
 
-        return $priceObjects;
-    }
-
-    /**
-     * Merge and apply pricing logic.
-     *
-     * @param  array  $databasePrices
-     * @param  array  $livePrices
-     * @return \Illuminate\Support\Collection
-     */
-    private function mergePrices(array $databasePrices, object $livePrices): \Illuminate\Support\Collection
-    {
-        $mergedPrices = collect($databasePrices);
-
-        foreach ($livePrices as $livePrice) {
-            $existingPrice = $this->findExistingPrice($livePrice, $mergedPrices->toArray());
-
-            if (!$existingPrice || $livePrice['value'] < $existingPrice['value']) {
-                $mergedPrices->push($livePrice);
-            }
-        }
-
-        return $mergedPrices;
-    }
-
-    /**
-     *  Finds an existing price in the list of merged prices based on specific criteria.
-     *
-     * @param  array  $livePrice
-     * @param  array  $mergedPrices
-     * @return array|null
-     */
-    private function findExistingPrice(string $livePrice, array $mergedPrices): ?array
-    {
-        foreach ($mergedPrices as $existingPrice) {
-            if (
-                isset($existingPrice['sku']) 
-                && $existingPrice['sku'] === $livePrice['sku'] 
-                && $existingPrice['account_id'] === $livePrice['account_id']
-            ) {
-                return $existingPrice;
-            }
-        }
-    
-        return null;
+        return $firstPrice ? (object)$firstPrice : null;
     }
 
 

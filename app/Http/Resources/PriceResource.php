@@ -10,13 +10,36 @@ class PriceResource extends JsonResource
     /**
      * Transform the resource into an array.
      *
-     * @return array<string, mixed>
+     * @param Request $request
+     * @return array
      */
-    public function toArray(Request $request): array
+    public function toArray($request): array
     {
         return [
-            'sku' => $this->product?->sku,
-            'price' => $this->value,
-        ];    
+            'sku' => $this->getSku(),
+            'price' => $this->getValue(),
+        ];
+    }
+
+    /**
+     * Get SKU attribute.
+     *
+     * @return string|null
+     */
+    private function getSku(): ?string
+    {
+        return $this->resource->sku ?? $this->resource->product->sku;
+    }
+
+    /**
+     * Get value attribute.
+     *
+     * @return float|null
+     */
+    private function getValue(): ?float
+    {
+        return property_exists($this->resource, 'price') 
+            ? $this->resource->price 
+            : $this->resource->value;
     }
 }
