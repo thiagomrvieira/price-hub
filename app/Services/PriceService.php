@@ -33,23 +33,17 @@ class PriceService
      *
      * @param  string  $productCode
      * @param  string|null  $accountId
-     * @return Price
+     * @return Price|null
      */
-    private function getDatabaseBestPrice(string $productCode, ?string $accountId = null): Price
+    private function getDatabaseBestPrice(string $productCode, ?string $accountId = null): ?Price
     {
-        $productId = Product::where('sku', $productCode)->value('id');
-        $accountId = Account::where('external_reference', $accountId)->value('id');
-        $query = Price::where('product_id', $productId);
-    
-        if ($accountId !== null) {
-            $query->where(function ($query) use ($accountId) {
-                $query->where('account_id', $accountId)->orWhereNull('account_id');
-            });
-        } else {
-            $query->whereNull('account_id');
+        $result = \DB::select('CALL GetDatabaseBestPrice(?, ?)', [$productCode, $accountId]);
+
+        if (!empty($result)) {
+            return (new Price())->forceFill((array) $result[0]);
         }
-            
-        return $query->orderBy('value')->first();
+    
+        return null;
     }
 
 
