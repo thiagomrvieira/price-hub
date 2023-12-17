@@ -28,7 +28,11 @@ class PriceResource extends JsonResource
      */
     private function getSku(): ?string
     {
-        return $this->resource->sku ?? $this->resource->product->sku;
+        if ($this->resource) {
+            return $this->resource->sku ?? $this->resource->product->sku;
+        }
+    
+        return null;
     }
 
     /**
@@ -38,8 +42,14 @@ class PriceResource extends JsonResource
      */
     private function getValue(): ?float
     {
-        return property_exists($this->resource, 'price') 
-            ? $this->resource->price 
-            : $this->resource->value;
+        if ($this->resource) {
+            $price = property_exists($this->resource, 'price') 
+                ? $this->resource->price 
+                : $this->resource->value;
+            
+            return number_format($price, 2, '.', '');
+        }
+    
+        return null;
     }
 }
