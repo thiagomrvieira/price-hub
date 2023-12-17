@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Price;
 use App\Models\Account;
 use App\Models\Product;
+use Illuminate\Database\Eloquent\Collection;
 
 class PriceService
 {
@@ -14,17 +15,18 @@ class PriceService
      *
      * @param  string  $productCode
      * @param  string|null  $accountId
-     * @return array
+     * @return \Illuminate\Support\Collection
      */
-    public function getPrices(string $productCode, ?string $accountId = null): array
+    public function getPrices(string $productCode, ?string $accountId = null) 
     {
-        $livePrices = $this->getLivePrices($productCode, $accountId);
+        // $livePrices = $this->getLivePrices($productCode, $accountId);
+        return $this->getDatabasePrices($productCode, $accountId);
+        // dd( $this->getDatabasePrices($productCode, $accountId)->first());
+        // $databasePrices = empty($livePrices) ? $this->getDatabasePrices($productCode, $accountId) : [];
 
-        $databasePrices = empty($livePrices) ? $this->getDatabasePrices($productCode, $accountId) : [];
+        // $mergedPrices = $this->mergePrices($databasePrices, $livePrices);
 
-        $mergedPrices = $this->mergePrices($databasePrices, $livePrices);
-
-        return $mergedPrices;
+        // return collect($mergedPrices);
     }
 
     /**
@@ -32,39 +34,47 @@ class PriceService
      *
      * @param  string  $productCode
      * @param  string|null  $accountId
-     * @return array
+     * @return Price
      */
-    private function getDatabasePrices(string $productCode, ?string $accountId = null): array
+    private function getDatabasePrices(string $productCode, ?string $accountId = null): Price
     {
         $productId = Product::where('sku', $productCode)->value('id');
         $accountId = Account::where('external_reference', $accountId)->value('id');
         $query = Price::where('product_id', $productId);
-
+    
         if ($accountId !== null) {
             $query->where(function ($query) use ($accountId) {
                 $query->where('account_id', $accountId)->orWhereNull('account_id');
             });
+        } else {
+            $query->whereNull('account_id');
         }
-
-        $lowestPrice = $query->orderBy('value')->first();
-
-        return $lowestPrice ? [$lowestPrice->toArray()] : [];
+            
+        return $query->orderBy('value')->first();
     }
 
     /**
      * Get live prices from the JSON file.
      *
-     * @return array
+     * @return object|null
      */
-    private function getLivePrices(string $productCode, ?string $accountId = null): array
+    private function getLivePrices(string $productCode, ?string $accountId = null): ?object
     {
         $filePath = base_path('app/Services/live_prices.json');
         $livePrices = file_exists($filePath) ? $this->decodeJsonFile($filePath) : [];
 
-        return array_filter($livePrices, function ($price) use ($productCode, $accountId) {
+        // Filtrar os preços ao código do produto (SKU) e conta específica
+        $filteredPrices = array_filter($livePrices, function ($price) use ($productCode, $accountId) {
             return isset($price['sku']) && $price['sku'] === $productCode
                 && (!isset($price['account']) || ($accountId && $price['account'] === $accountId));
         });
+
+        // Mapear os preços filtrados para objetos
+        $priceObjects = collect($filteredPrices)->map(function ($priceData) {
+            return (object)$priceData;
+        });
+
+        return $priceObjects;
     }
 
     /**
@@ -72,17 +82,17 @@ class PriceService
      *
      * @param  array  $databasePrices
      * @param  array  $livePrices
-     * @return array
+     * @return \Illuminate\Support\Collection
      */
-    private function mergePrices(array $databasePrices, array $livePrices): array
+    private function mergePrices(array $databasePrices, object $livePrices): \Illuminate\Support\Collection
     {
-        $mergedPrices = $databasePrices;
+        $mergedPrices = collect($databasePrices);
 
         foreach ($livePrices as $livePrice) {
-            $existingPrice = $this->findExistingPrice($livePrice, $mergedPrices);
+            $existingPrice = $this->findExistingPrice($livePrice, $mergedPrices->toArray());
 
             if (!$existingPrice || $livePrice['value'] < $existingPrice['value']) {
-                $mergedPrices[] = $livePrice;
+                $mergedPrices->push($livePrice);
             }
         }
 
@@ -96,7 +106,7 @@ class PriceService
      * @param  array  $mergedPrices
      * @return array|null
      */
-    private function findExistingPrice(array $livePrice, array $mergedPrices): ?array
+    private function findExistingPrice(string $livePrice, array $mergedPrices): ?array
     {
         foreach ($mergedPrices as $existingPrice) {
             if (

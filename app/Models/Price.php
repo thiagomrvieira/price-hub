@@ -16,4 +16,14 @@ class Price extends Model
         'quantity',
         'value',
     ];
+    
+    /**
+     * Define the "belongs to" relationship with the Product model.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function product()
+    {
+        return $this->belongsTo(Product::class);
+    }
 }

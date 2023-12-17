@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Services\PriceService;
+use App\Http\Resources\PriceResource;
 
 class PriceController extends Controller
 {
@@ -17,9 +18,9 @@ class PriceController extends Controller
      */
     public function index(string $productCode, ?string $accountId = null)
     {
-        $prices = $this->priceService->getPrices($productCode, $accountId);
-
-        return response()->json(['prices' => $prices]);
+        return new PriceResource(
+            $this->priceService->getPrices($productCode, $accountId)
+        );
     }
 
 }
