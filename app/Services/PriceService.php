@@ -17,14 +17,15 @@ class PriceService
      * @param  string|null  $accountId
      * @return \Illuminate\Support\Collection
      */
-    public function getPrices(string $productCode, ?string $accountId = null) 
-    {
-        $livePrices = $this->getLivePrices($productCode, $accountId);
-        $databasePrices = $this->getDatabasePrices($productCode, $accountId);
+    public function getBestPrice(string $productCode, ?string $accountId = null) 
+    {   
+        $liveBestPrice = $this->getLiveBestPrice($productCode, $accountId);
+    
+        $bestPrice = empty($liveBestPrice)
+            ? $this->getDatabaseBestPrice($productCode, $accountId)
+            : $liveBestPrice;
 
-        return $livePrices;
-        return $databasePrices;
-        
+        return $bestPrice;
     }
 
     /**
@@ -34,7 +35,7 @@ class PriceService
      * @param  string|null  $accountId
      * @return Price
      */
-    private function getDatabasePrices(string $productCode, ?string $accountId = null): Price
+    private function getDatabaseBestPrice(string $productCode, ?string $accountId = null): Price
     {
         $productId = Product::where('sku', $productCode)->value('id');
         $accountId = Account::where('external_reference', $accountId)->value('id');
@@ -57,7 +58,7 @@ class PriceService
      *
      * @return object|null
      */
-    private function getLivePrices(string $productCode, ?string $accountId = null): ?object
+    private function getLiveBestPrice(string $productCode, ?string $accountId = null): ?object
     {
         $filePath = base_path('app/Services/live_prices.json');
         $livePrices = file_exists($filePath) ? $this->decodeJsonFile($filePath) : [];

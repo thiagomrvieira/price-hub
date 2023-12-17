@@ -19,7 +19,7 @@ class PriceController extends Controller
     public function index(string $productCode, ?string $accountId = null)
     {
         return new PriceResource(
-            $this->priceService->getPrices($productCode, $accountId)
+            $this->priceService->getBestPrice($productCode, $accountId)
         );
     }
 
