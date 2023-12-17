@@ -27,7 +27,10 @@ pricing” feed.
    ```shell
    composer install
    ```
-3. Configure the database connection in the `.env` file.
+3. Create a database and configure the connection in the `.env` file and run the seed. It will also create the procedure
+   ```shell
+   php artisan db:seed
+   ```
 4. Run the command to import the necessary the initial data:   
    ```shell
    php artisan import:prices-csv
