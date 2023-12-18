@@ -54,7 +54,7 @@ pricing” feed.
     npm run build
 
     # Start the development server
-    npm run serve
+    npm run dev
     ```
 6. You can now use the price hub system by calling the route http://127.0.0.1:8000/.
 
