@@ -1,3 +1,5 @@
+![Project screenshot](https://github.com/thiagomrvieira/price-hub/image.png)
+
 # Usecase
 
 You have a user logged into an ecommerce store. Only prices for their account should be
@@ -17,7 +19,15 @@ real time. A price is always related to a product, and it could optionally be re
 references to each entity - into the prices table
 - Read the JSON price file in real-time and do not load it into the database. This represents a “live
 pricing” feed.
-- Develop an output for the fun
+- Develop an output for the function that gets the price
+
+## Stack
+
+- PHP
+- Laravel
+- MySQL Stored procedures
+- VueJS
+- Tailwind CSS
 
 
 ## Setup and Configuration
@@ -46,3 +56,6 @@ pricing” feed.
     # Start the development server
     npm run serve
     ```
+6. You can now use the price hub system by calling the route http://127.0.0.1:8000/.
+
+
