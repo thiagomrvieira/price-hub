@@ -1,4 +1,4 @@
-![Project screenshot](https://github.com/thiagomrvieira/price-hub/image.png)
+![Project screenshot](https://github.com/thiagomrvieira/price-hub/blob/main/image.png)
 
 # Usecase
 
