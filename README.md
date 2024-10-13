@@ -33,19 +33,12 @@ pricing” feed.
 ## Setup and Configuration
 
 1. Clone the project repository.
-2. Install the required dependencies using Composer:
+2. Setup the app using:
    ```shell
-   composer install
+   php artisan app:install
    ```
-3. Create a database and configure the connection in the .env file, then run the seed. This process will populate the database and also create the stored procedure.
-   ```shell
-   php artisan db:seed
-   ```
-4. Run the command to import the necessary the initial data:   
-   ```shell
-   php artisan import:prices-csv
-   ```
-5. Build and run the Vue.js app:
+   It will create the environment file and install the dependencies, create the database, run the migrations and seed the database.
+3. Build and run the Vue.js app:
     ```shell
     # Install the required dependencies
     npm install
@@ -56,6 +49,6 @@ pricing” feed.
     # Start the development server
     npm run dev
     ```
-6. You can now use the price hub system by calling the route http://127.0.0.1:8000/.
+4. You can now use the price hub system by calling the route http://127.0.0.1:8000/.
 
 
