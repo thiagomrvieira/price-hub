@@ -42,48 +42,37 @@ class ImportPricesCsv extends Command
         $this->info("Importing prices from CSV file: $filePath");
 
         $csvData = array_map('str_getcsv', file($filePath));
-        $header = array_shift($csvData);
+        $header = array_map('strtolower', array_shift($csvData));
+
+        $this->info("Loading products, accounts and users mapping...");
+        $productMap = Product::pluck('id', 'sku')->toArray();
+        $accountMap = Account::pluck('id', 'external_reference')->toArray();
+        $userMap = User::pluck('id', 'external_reference')->toArray();
 
         $bar = $this->output->createProgressBar(count($csvData));
         $bar->start();
 
-        $this->importData($csvData, $header, $bar);
-
-        $bar->finish();
-
-        $this->info('');
-        $this->info('Import completed.');
-    }
-
-    /**
-     * Import data from CSV to the prices table using batching.
-     *
-     * @param array $csvData
-     * @param array $header
-     * @param ProgressBar $bar
-     * @return void
-     */
-    private function importData(array $csvData, array $header, $bar): void
-    {
         $batchSize = 1000;
         $batchData = [];
 
         foreach ($csvData as $row) {
-            $skuIndex = array_search('sku', $header);
-            $accountRefIndex = array_search('account_ref', $header);
-            $userRefIndex = array_search('user_ref', $header);
-            $quantityIndex = array_search('quantity', $header);
-            $valueIndex = array_search('value', $header);
+            $data = array_combine($header, $row);
 
-            $sku = $row[$skuIndex];
-            $accountRef = $row[$accountRefIndex];
-            $userRef = $row[$userRefIndex];
-            $quantity = $row[$quantityIndex];
-            $value = $row[$valueIndex];
+            $sku = $data['sku'];
+            $accountRef = $data['account_ref'];
+            $userRef = $data['user_ref'];
+            $quantity = $data['quantity'];
+            $value = $data['value'];
 
-            $productId = $this->getIdByColumnValue(Product::class, 'sku', $sku);
-            $accountId = $this->getIdByColumnValue(Account::class, 'external_reference', $accountRef);
-            $userId = $this->getIdByColumnValue(User::class, 'external_reference', $userRef);
+            $productId = $productMap[$sku] ?? null;
+            $accountId = $accountMap[$accountRef] ?? null;
+            $userId = $userMap[$userRef] ?? null;
+
+            if (is_null($productId)) {
+                $this->warn("Linha ignorada devido a referência inválida: SKU=$sku, AccountRef=$accountRef, UserRef=$userRef");
+                $bar->advance();
+                continue;
+            }
 
             $batchData[] = [
                 'product_id' => $productId,
@@ -91,6 +80,8 @@ class ImportPricesCsv extends Command
                 'user_id' => $userId,
                 'quantity' => $quantity,
                 'value' => $value,
+                'created_at' => now(),
+                'updated_at' => now(),
             ];
 
             if (count($batchData) >= $batchSize) {
@@ -104,19 +95,10 @@ class ImportPricesCsv extends Command
         if (count($batchData) > 0) {
             DB::table('prices')->insert($batchData);
         }
-    }
 
+        $bar->finish();
 
-    /**
-     * Get the ID of a model by the value of a specific column.
-     *
-     * @param  string  $modelClass
-     * @param  string  $column
-     * @param  mixed   $value
-     * @return int|null
-     */
-    private function getIdByColumnValue(string $modelClass, string $column, $value): ?int
-    {
-        return $modelClass::where($column, $value)->value('id');
+        $this->info('');
+        $this->info('Import completed successfully.');
     }
 }
