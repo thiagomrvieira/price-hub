@@ -17,10 +17,10 @@ class PriceService
      * @param  string|null  $accountId
      * @return \Illuminate\Support\Collection
      */
-    public function getBestPrice(string $productCode, ?string $accountId = null) 
-    {   
+    public function getBestPrice(string $productCode, ?string $accountId = null)
+    {
         $liveBestPrice = $this->getLiveBestPrice($productCode, $accountId);
-    
+
         $bestPrice = empty($liveBestPrice)
             ? $this->getDatabaseBestPrice($productCode, $accountId)
             : $liveBestPrice;
@@ -42,7 +42,7 @@ class PriceService
         if (!empty($result)) {
             return (new Price())->forceFill((array) $result[0]);
         }
-    
+
         return null;
     }
 
@@ -57,14 +57,20 @@ class PriceService
         $filePath = base_path('app/Services/live_prices.json');
         $livePrices = file_exists($filePath) ? $this->decodeJsonFile($filePath) : [];
 
-        $filteredPrices = array_filter($livePrices, function ($price) use ($productCode, $accountId) {
-            return isset($price['sku']) && $price['sku'] === $productCode
-                && (!isset($price['account']) || ($accountId && $price['account'] === $accountId));
-        });
+        $filteredPrices = array_filter($livePrices, fn($price) =>
+            $price['sku'] === $productCode &&
+            ($accountId === null || (isset($price['account']) && $price['account'] === $accountId))
+        );
 
-        $firstPrice = reset($filteredPrices);
+        if (empty($filteredPrices)) {
+            return null;
+        }
 
-        return $firstPrice ? (object)$firstPrice : null;
+        $minPriceData = array_reduce($filteredPrices, fn($carry, $item) =>
+            $carry === null || $item['price'] < $carry['price'] ? $item : $carry
+        );
+
+        return (object)$minPriceData;
     }
 
 
