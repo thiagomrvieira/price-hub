@@ -37,12 +37,12 @@ pricing” feed.
    ```shell
    php artisan app:install
    ```
-   It will create the environment file and install the dependencies, create the database, run the migrations and seed the database.
+   It will create the environment file and install the dependencies.
 3. Setup the database running:
    ```shell
    php artisan migrate:fresh --seed
    ```
-   It will create the environment file and install the dependencies, create the database, run the migrations and seed the database.
+   It will create the database, run the migrations and seed the database.
 4. Build and run the Vue.js app:
     ```shell
     # Install the required dependencies
