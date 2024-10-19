@@ -38,7 +38,12 @@ pricing” feed.
    php artisan app:install
    ```
    It will create the environment file and install the dependencies, create the database, run the migrations and seed the database.
-3. Build and run the Vue.js app:
+3. Setup the database running:
+   ```shell
+   php artisan migrate:fresh --seed
+   ```
+   It will create the environment file and install the dependencies, create the database, run the migrations and seed the database.
+4. Build and run the Vue.js app:
     ```shell
     # Install the required dependencies
     npm install
@@ -48,6 +53,10 @@ pricing” feed.
 
     # Start the development server
     npm run dev
+    ```
+5. Start the development server:
+    ```shell
+    php artisan serve
     ```
 4. You can now use the price hub system by calling the route http://127.0.0.1:8000/.
 

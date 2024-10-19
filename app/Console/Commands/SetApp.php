@@ -24,22 +24,9 @@ class SetApp extends Command
             return 1;
         }
 
-        if (!$this->clearConfigCache()) {
-            return 1;
-        }
-
-        if (!$this->migrateFresh()) {
-            return 1;
-        }
-
-        if (!$this->seedDatabase()) {
-            return 1;
-        }
-
         $this->call('key:generate');
 
         $this->info("Application setup completed successfully! \n");
-
 
         return 0;
     }
@@ -54,6 +41,7 @@ class SetApp extends Command
             $this->info(".env file already exists, skipping copy. \n");
         }
 
+        $this->updateEnvFile($envPath, 'AP_NAME', 'Price-Hub');
         $this->updateEnvFile($envPath, 'DB_CONNECTION', 'mysql');
         $this->updateEnvFile($envPath, 'DB_HOST', '127.0.0.1');
         $this->updateEnvFile($envPath, 'DB_PORT', '3306');
@@ -78,56 +66,6 @@ class SetApp extends Command
             return true;
         } catch (ProcessFailedException $exception) {
             $this->error("Composer install failed: {$exception->getMessage()} \n");
-
-            return false;
-        }
-    }
-
-    protected function clearConfigCache(): bool
-    {
-        $this->info("Clearing config cache...\n");
-
-        try {
-            $this->call('config:clear');
-            $this->call('config:clear');
-            $this->call('config:cache');
-            $this->info("Config cache cleared successfully. \n");
-
-            return true;
-        } catch (\Exception $e) {
-            $this->error("Failed to clear config cache:  {$e->getMessage()} \n");
-
-            return false;
-        }
-    }
-
-    protected function migrateFresh(): bool
-    {
-        $this->info("Running migrations...\n");
-
-        try {
-            $this->call('migrate:fresh');
-            $this->info("Migrations completed successfully. \n");
-
-            return true;
-        } catch (\Exception $e) {
-            $this->error("Migration failed: {$e->getMessage()} \n");
-
-            return false;
-        }
-    }
-
-    protected function seedDatabase(): bool
-    {
-        $this->info("Seeding database... \n");
-
-        try {
-            $this->call('db:seed');
-            $this->info("Database seeding completed successfully. \n");
-
-            return true;
-        } catch (\Exception $e) {
-            $this->error("Database seeding failed: {$e->getMessage()} \n");
 
             return false;
         }
