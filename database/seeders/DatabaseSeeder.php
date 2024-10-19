@@ -14,24 +14,28 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        $backupPath = database_path('seeders/backups/Dump20231217.sql');
+        $this->call(AccountsTableSeeder::class);
+        $this->call(UsersTableSeeder::class);
+        $this->call(ProductsTableSeeder::class);
 
-        if (!File::exists($backupPath)) {
-            $this->command->error("Backup file not found at: {$backupPath}");
-            return;
-        }
+        // $backupPath = database_path('seeders/backups/Dump20231217.sql');
 
-        $this->command->info('Restoring backup...');
-        $this->command->info('');
+        // if (!File::exists($backupPath)) {
+        //     $this->command->error("Backup file not found at: {$backupPath}");
+        //     return;
+        // }
 
-        try {
-            $this->restoreDatabase($backupPath);
-            $this->command->info('Backup restored successfully.');
-        } catch (ProcessFailedException $e) {
-            $this->command->error('Failed to restore backup: ' . $e->getMessage());
-        }
+        // $this->command->info('Restoring backup...');
+        // $this->command->info('');
 
-        $this->command->info('');
+        // try {
+        //     $this->restoreDatabase($backupPath);
+        //     $this->command->info('Backup restored successfully.');
+        // } catch (ProcessFailedException $e) {
+        //     $this->command->error('Failed to restore backup: ' . $e->getMessage());
+        // }
+
+        // $this->command->info('');
     }
 
     /**
